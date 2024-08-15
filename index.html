@@ -239,7 +239,7 @@
 
             newRow.innerHTML = `
                 <td>${rowCount}</td>
-                <td contenteditable="true" onblur="this.innerText = this.innerText.toUpperCase()" oninput="keepCursorPosition(this)"></td>
+                <td contenteditable="true" oninput="this.innerText = this.innerText.toUpperCase(); keepCursorPosition(this)"></td>
                 <td contenteditable="true" onkeypress="return isNumberKey(event)" oninput="updateAmount(this)"></td>
                 <td onclick="toggleStatus(this)">Pending</td>
                 <td><i class="fas fa-trash delete-btn" onclick="confirmRowDelete(this)"></i></td>
@@ -406,6 +406,12 @@
 
             for (let i = 0; i < rows.length; i++) {
                 rows[i].cells[0].innerText = i + 1;
+                // Update Sr No in Firebase
+                if (rows[i].dataset.id) {
+                    updateDoc(doc(db, "paymentRows", rows[i].dataset.id), {
+                        srNo: i + 1
+                    });
+                }
             }
         }
 
@@ -415,19 +421,34 @@
             const tableBody = document.getElementById('tableBody');
             tableBody.innerHTML = '';
 
+            let rows = [];
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
+                rows.push({id: doc.id, ...data});
+            });
+
+            // Sort rows by srNo
+            rows.sort((a, b) => a.srNo - b.srNo);
+
+            rows.forEach((data, index) => {
                 const newRow = document.createElement('tr');
-                newRow.dataset.id = doc.id;
+                newRow.dataset.id = data.id;
 
                 newRow.innerHTML = `
-                    <td>${data.srNo}</td>
-                    <td contenteditable="true" onblur="this.innerText = this.innerText.toUpperCase()" oninput="keepCursorPosition(this)">${data.name}</td>
+                    <td>${index + 1}</td>
+                    <td contenteditable="true" oninput="this.innerText = this.innerText.toUpperCase(); keepCursorPosition(this)">${data.name}</td>
                     <td contenteditable="true" onkeypress="return isNumberKey(event)" oninput="updateAmount(this)">${data.amount}</td>
                     <td onclick="toggleStatus(this)">${data.status}</td>
                     <td><i class="fas fa-trash delete-btn" onclick="confirmRowDelete(this)"></i></td>
                 `;
                 tableBody.appendChild(newRow);
+
+                // Update srNo in Firebase if it's different
+                if (data.srNo !== index + 1) {
+                    updateDoc(doc(db, "paymentRows", data.id), {
+                        srNo: index + 1
+                    });
+                }
             });
 
             updateTotal();
@@ -443,7 +464,7 @@
                 if (row.dataset.id) {
                     try {
                         await updateDoc(doc(db, "paymentRows", row.dataset.id), {
-                            name: event.target.innerText
+                            name: event.target.innerText.toUpperCase()
                         });
                     } catch (e) {
                         console.error("Error updating document: ", e);
