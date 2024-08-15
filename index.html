@@ -202,7 +202,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -415,51 +415,47 @@
             }
         }
 
-        // Real-time listener for changes in Firebase
-        function setupRealtimeListener() {
+        // Load data from Firebase on page load
+        async function loadDataFromFirebase() {
+            const querySnapshot = await getDocs(collection(db, "paymentRows"));
             const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
 
-            onSnapshot(collection(db, "paymentRows"), (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") {
-                        const data = change.doc.data();
-                        const newRow = document.createElement('tr');
-                        newRow.dataset.id = change.doc.id;
-
-                        newRow.innerHTML = `
-                            <td>${data.srNo}</td>
-                            <td contenteditable="true" oninput="this.innerText = this.innerText.toUpperCase(); keepCursorPosition(this)">${data.name}</td>
-                            <td contenteditable="true" onkeypress="return isNumberKey(event)" oninput="updateAmount(this)">${data.amount}</td>
-                            <td onclick="toggleStatus(this)">${data.status}</td>
-                            <td><i class="fas fa-trash delete-btn" onclick="confirmRowDelete(this)"></i></td>
-                        `;
-                        tableBody.appendChild(newRow);
-                    }
-                    if (change.type === "modified") {
-                        const data = change.doc.data();
-                        const row = tableBody.querySelector(`tr[data-id="${change.doc.id}"]`);
-                        if (row) {
-                            row.cells[0].innerText = data.srNo;
-                            row.cells[1].innerText = data.name;
-                            row.cells[2].innerText = data.amount;
-                            row.cells[3].innerText = data.status;
-                        }
-                    }
-                    if (change.type === "removed") {
-                        const row = tableBody.querySelector(`tr[data-id="${change.doc.id}"]`);
-                        if (row) {
-                            row.remove();
-                        }
-                    }
-                });
-
-                updateSrNo();
-                updateTotal();
+            let rows = [];
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                rows.push({id: doc.id, ...data});
             });
+
+            // Sort rows by srNo
+            rows.sort((a, b) => a.srNo - b.srNo);
+
+            rows.forEach((data, index) => {
+                const newRow = document.createElement('tr');
+                newRow.dataset.id = data.id;
+
+                newRow.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td contenteditable="true" oninput="this.innerText = this.innerText.toUpperCase(); keepCursorPosition(this)">${data.name}</td>
+                    <td contenteditable="true" onkeypress="return isNumberKey(event)" oninput="updateAmount(this)">${data.amount}</td>
+                    <td onclick="toggleStatus(this)">${data.status}</td>
+                    <td><i class="fas fa-trash delete-btn" onclick="confirmRowDelete(this)"></i></td>
+                `;
+                tableBody.appendChild(newRow);
+
+                // Update srNo in Firebase if it's different
+                if (data.srNo !== index + 1) {
+                    updateDoc(doc(db, "paymentRows", data.id), {
+                        srNo: index + 1
+                    });
+                }
+            });
+
+            updateTotal();
         }
 
-        // Call setupRealtimeListener when the page loads
-        window.addEventListener('load', setupRealtimeListener);
+        // Call loadDataFromFirebase when the page loads
+        window.addEventListener('load', loadDataFromFirebase);
 
         // Update Firebase when name is changed
         document.getElementById('tableBody').addEventListener('blur', async function(event) {
