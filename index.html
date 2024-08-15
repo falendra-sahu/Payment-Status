@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<html><head><base href="https://websimcreationengine.example.com/"></head><body><html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -27,7 +26,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 800px;
-            overflow-x: auto; /* Allow horizontal scroll if necessary */
+            overflow-x: auto;
         }
 
         h1 {
@@ -42,6 +41,10 @@
             gap: 10px;
             justify-content: center;
             flex-wrap: wrap; 
+        }
+
+        #addRow, #deleteRows {
+            display: none; /* Hidden by default */
         }
 
         button {
@@ -156,6 +159,7 @@
     <div class="container">
         <h1>Payment Status</h1>
         <div id="buttonContainer">
+            <button id="toggleButtons"><i class="fas fa-eye"></i> Show Buttons</button>
             <button id="addRow"><i class="fas fa-plus"></i> Add Row</button>
             <button id="deleteRows"><i class="fas fa-trash"></i> Delete All Rows</button>
         </div>
@@ -194,10 +198,41 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDjgXM4Cei5UnSl1d5vaDkquGnVRPhgipM",
+            authDomain: "payment-status-b5e0e.firebaseapp.com",
+            projectId: "payment-status-b5e0e",
+            storageBucket: "payment-status-b5e0e.appspot.com",
+            messagingSenderId: "635056081890",
+            appId: "1:635056081890:web:882bc5cb47799549bf47bb",
+            measurementId: "G-VKM2VKED9E"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
         let rowToDelete = null;
 
-        document.getElementById('addRow').addEventListener('click', function () {
+        document.getElementById('toggleButtons').addEventListener('click', function () {
+            const addRowButton = document.getElementById('addRow');
+            const deleteRowsButton = document.getElementById('deleteRows');
+            const isHidden = addRowButton.style.display === 'none';
+
+            addRowButton.style.display = isHidden ? 'inline-block' : 'none';
+            deleteRowsButton.style.display = isHidden ? 'inline-block' : 'none';
+            this.innerHTML = isHidden ? '<i class="fas fa-eye-slash"></i> Hide Buttons' : '<i class="fas fa-eye"></i> Show Buttons';
+        });
+
+        document.getElementById('addRow').addEventListener('click', async function () {
             const tableBody = document.getElementById('tableBody');
             const rowCount = tableBody.getElementsByTagName('tr').length + 1;
             const newRow = document.createElement('tr');
@@ -210,14 +245,40 @@
                 <td><i class="fas fa-trash delete-btn" onclick="confirmRowDelete(this)"></i></td>
             `;
             tableBody.appendChild(newRow);
+
+            // Add new row to Firebase
+            try {
+                const docRef = await addDoc(collection(db, "paymentRows"), {
+                    srNo: rowCount,
+                    name: "",
+                    amount: "",
+                    status: "Pending"
+                });
+                newRow.dataset.id = docRef.id;
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
         });
 
         document.getElementById('deleteRows').addEventListener('click', function () {
             document.getElementById('confirmationDialog').style.display = 'flex';
         });
 
-        document.getElementById('confirmDelete').addEventListener('click', function () {
+        document.getElementById('confirmDelete').addEventListener('click', async function () {
             const tableBody = document.getElementById('tableBody');
+            const rows = tableBody.getElementsByTagName('tr');
+
+            // Delete all documents from Firebase
+            for (let row of rows) {
+                if (row.dataset.id) {
+                    try {
+                        await deleteDoc(doc(db, "paymentRows", row.dataset.id));
+                    } catch (e) {
+                        console.error("Error deleting document: ", e);
+                    }
+                }
+            }
+
             tableBody.innerHTML = '';
             updateTotal();
             document.getElementById('confirmationDialog').style.display = 'none';
@@ -227,13 +288,20 @@
             document.getElementById('confirmationDialog').style.display = 'none';
         });
 
-        function confirmRowDelete(icon) {
+        window.confirmRowDelete = function(icon) {
             rowToDelete = icon.closest('tr');
             document.getElementById('rowConfirmationDialog').style.display = 'flex';
-        }
+        };
 
-        document.getElementById('confirmRowDelete').addEventListener('click', function () {
+        document.getElementById('confirmRowDelete').addEventListener('click', async function () {
             if (rowToDelete) {
+                if (rowToDelete.dataset.id) {
+                    try {
+                        await deleteDoc(doc(db, "paymentRows", rowToDelete.dataset.id));
+                    } catch (e) {
+                        console.error("Error deleting document: ", e);
+                    }
+                }
                 rowToDelete.remove();
                 updateSrNo();
                 updateTotal();
@@ -247,20 +315,32 @@
             rowToDelete = null;
         });
 
-        function toggleStatus(td) {
-            td.innerText = (td.innerText === "Pending") ? "Done" : "Pending";
-        }
+        window.toggleStatus = async function(td) {
+            const newStatus = (td.innerText === "Pending") ? "Done" : "Pending";
+            td.innerText = newStatus;
 
-        function isNumberKey(evt) {
+            const row = td.parentElement;
+            if (row.dataset.id) {
+                try {
+                    await updateDoc(doc(db, "paymentRows", row.dataset.id), {
+                        status: newStatus
+                    });
+                } catch (e) {
+                    console.error("Error updating document: ", e);
+                }
+            }
+        };
+
+        window.isNumberKey = function(evt) {
             const charCode = (evt.which) ? evt.which : evt.keyCode;
             return !(charCode > 31 && (charCode < 48 || charCode > 57));
-        }
+        };
 
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
 
-        function updateAmount(input) {
+        window.updateAmount = async function(input) {
             const originalValue = input.innerText.replace(/,/g, '');
             let formattedValue = '';
 
@@ -281,9 +361,20 @@
 
             input.innerText = formattedValue;
             updateTotal();
-        }
 
-        function keepCursorPosition(input) {
+            const row = input.parentElement;
+            if (row.dataset.id) {
+                try {
+                    await updateDoc(doc(db, "paymentRows", row.dataset.id), {
+                        amount: formattedValue
+                    });
+                } catch (e) {
+                    console.error("Error updating document: ", e);
+                }
+            }
+        };
+
+        window.keepCursorPosition = function(input) {
             setTimeout(() => {
                 const range = document.createRange();
                 const selection = window.getSelection();
@@ -292,7 +383,7 @@
                 selection.removeAllRanges();
                 selection.addRange(range);
             }, 0);
-        }
+        };
 
         function updateTotal() {
             const tableBody = document.getElementById('tableBody');
@@ -317,6 +408,50 @@
                 rows[i].cells[0].innerText = i + 1;
             }
         }
+
+        // Load data from Firebase on page load
+        async function loadDataFromFirebase() {
+            const querySnapshot = await getDocs(collection(db, "paymentRows"));
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const newRow = document.createElement('tr');
+                newRow.dataset.id = doc.id;
+
+                newRow.innerHTML = `
+                    <td>${data.srNo}</td>
+                    <td contenteditable="true" onblur="this.innerText = this.innerText.toUpperCase()" oninput="keepCursorPosition(this)">${data.name}</td>
+                    <td contenteditable="true" onkeypress="return isNumberKey(event)" oninput="updateAmount(this)">${data.amount}</td>
+                    <td onclick="toggleStatus(this)">${data.status}</td>
+                    <td><i class="fas fa-trash delete-btn" onclick="confirmRowDelete(this)"></i></td>
+                `;
+                tableBody.appendChild(newRow);
+            });
+
+            updateTotal();
+        }
+
+        // Call loadDataFromFirebase when the page loads
+        window.addEventListener('load', loadDataFromFirebase);
+
+        // Update Firebase when name is changed
+        document.getElementById('tableBody').addEventListener('blur', async function(event) {
+            if (event.target.cellIndex === 1) { // Name column
+                const row = event.target.parentElement;
+                if (row.dataset.id) {
+                    try {
+                        await updateDoc(doc(db, "paymentRows", row.dataset.id), {
+                            name: event.target.innerText
+                        });
+                    } catch (e) {
+                        console.error("Error updating document: ", e);
+                    }
+                }
+            }
+        }, true);
     </script>
 </body>
 </html>
+</body></html>
