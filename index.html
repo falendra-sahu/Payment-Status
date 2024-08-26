@@ -1,4 +1,5 @@
-<html><head><base href="https://websimcreationengine.example.com/"></head><body><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -13,10 +14,11 @@
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f4f4f9;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-            margin: 0;
+            margin: 0; 
+            display: flex; /* Flexbox layout */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 100vh; /* Full viewport height */
         }
 
         .container {
@@ -26,7 +28,8 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 800px;
-            overflow-x: auto;
+            overflow-x: auto; /* Enable horizontal scrolling */
+            display: none; /* Hidden until data is loaded */
         }
 
         h1 {
@@ -133,6 +136,30 @@
             margin: 5px;
         }
 
+        /* Skeleton loader styles */
+        .skeleton-loader {
+            display: flex;
+            flex-direction: column; /* Vertical stacking of lines */
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Full height for centering */
+            gap: 10px; /* Space between lines */
+        }
+
+        .skeleton {
+            height: 20px;
+            width: 300px; /* Width of each line */
+            background: #e0e0e0;
+            border-radius: 4px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
         @media (max-width: 600px) {
             button {
                 width: calc(50% - 5px); 
@@ -152,11 +179,18 @@
                 font-size: 1.2em; 
             }
         }
+
     </style>
 </head>
 
 <body>
-    <div class="container">
+    <div class="skeleton-loader" id="skeletonLoader">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+    </div>
+
+    <div class="container" id="mainContainer">
         <h1>Payment Status</h1>
         <div id="buttonContainer">
             <button id="toggleButtons"><i class="fas fa-eye"></i> Show Buttons</button>
@@ -199,12 +233,11 @@
     </div>
 
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
         import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // Your web app's Firebase configuration
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDjgXM4Cei5UnSl1d5vaDkquGnVRPhgipM",
             authDomain: "payment-status-b5e0e.firebaseapp.com",
@@ -442,15 +475,11 @@
                     <td><i class="fas fa-trash delete-btn" onclick="confirmRowDelete(this)"></i></td>
                 `;
                 tableBody.appendChild(newRow);
-
-                // Update srNo in Firebase if it's different
-                if (data.srNo !== index + 1) {
-                    updateDoc(doc(db, "paymentRows", data.id), {
-                        srNo: index + 1
-                    });
-                }
             });
 
+            // Show the main container and hide the loader
+            document.getElementById('mainContainer').style.display = 'block';
+            document.getElementById('skeletonLoader').style.display = 'none'; // Hide loader
             updateTotal();
         }
 
@@ -475,4 +504,3 @@
     </script>
 </body>
 </html>
-</body></html>
