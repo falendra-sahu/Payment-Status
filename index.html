@@ -15,10 +15,10 @@
             font-family: 'Poppins', sans-serif;
             background-color: #f4f4f9;
             margin: 0; 
-            display: flex; /* Flexbox layout */
-            justify-content: center; /* Center horizontally */
-            align-items: center; /* Center vertically */
-            height: 100vh; /* Full viewport height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
 
         .container {
@@ -28,8 +28,12 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 800px;
-            overflow-x: auto; /* Enable horizontal scrolling */
-            display: none; /* Hidden until data is loaded */
+            overflow: hidden; /* Prevent overflowing */
+        }
+
+        .table-container {
+            max-height: 400px; /* Height for the table container */
+            overflow-y: auto; /* Vertical scrollbar */
         }
 
         h1 {
@@ -43,11 +47,11 @@
             display: flex;
             gap: 10px;
             justify-content: center;
-            flex-wrap: wrap; 
+            flex-wrap: wrap;
         }
 
         #addRow, #deleteRows {
-            display: none; /* Hidden by default */
+            display: none;
         }
 
         button {
@@ -78,11 +82,9 @@
             border-collapse: collapse;
             margin-top: 20px;
             border-radius: 8px;
-            overflow: hidden;
         }
 
-        th,
-        td {
+        th, td {
             padding: 12px 15px;
             text-align: left;
             border: 1px solid #ddd;
@@ -139,19 +141,25 @@
         /* Skeleton loader styles */
         .skeleton-loader {
             display: flex;
-            flex-direction: column; /* Vertical stacking of lines */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh; /* Full height for centering */
-            gap: 10px; /* Space between lines */
+            width: 100%; /* Full width to cover */
+            position: absolute; /* Position absolute to center */
+            top: 0; /* Align to top */
+            left: 0; /* Align to left */
+            background-color: rgba(255, 255, 255, 0.8); /* Light background for loader */
+            z-index: 9998; /* Below dialog */
         }
 
         .skeleton {
             height: 20px;
-            width: 300px; /* Width of each line */
+            width: 300px;
             background: #e0e0e0;
             border-radius: 4px;
             animation: pulse 1.5s infinite;
+            margin: 5px 0; /* Margin between skeletons */
         }
 
         @keyframes pulse {
@@ -162,21 +170,20 @@
 
         @media (max-width: 600px) {
             button {
-                width: calc(50% - 5px); 
-                font-size: 0.8em; 
+                width: calc(50% - 5px);
+                font-size: 0.8em;
             }
 
             table {
-                font-size: 0.9em; 
+                font-size: 0.9em;
             }
 
-            th,
-            td {
-                padding: 10px; 
+            th, td {
+                padding: 10px;
             }
 
             .total {
-                font-size: 1.2em; 
+                font-size: 1.2em;
             }
         }
 
@@ -190,7 +197,7 @@
         <div class="skeleton"></div>
     </div>
 
-    <div class="container" id="mainContainer">
+    <div class="container" id="mainContainer" style="display: none;">
         <h1>Payment Status</h1>
         <div id="buttonContainer">
             <button id="toggleButtons"><i class="fas fa-eye"></i> Show Buttons</button>
@@ -200,20 +207,22 @@
         <div class="total">
             Total Amount: <span id="totalAmount">0</span>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Sr No</th>
-                    <th>Name</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <!-- Dynamic rows will be added here -->
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sr No</th>
+                        <th>Name</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Dynamic rows will be added here -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="confirmation-dialog" id="confirmationDialog">
