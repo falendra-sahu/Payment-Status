@@ -1,517 +1,648 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Payment Status</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Customer Payments</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* General Styles */
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      color: #333;
+    }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f4f4f9;
-            margin: 0; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 90vh;
-        }
+    /* Desktop-only Container */
+    .desktop-container {
+      width: 100%;
+      margin: 0 auto;
+    }
 
-        .container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 800px;
-            overflow: hidden; /* Prevent overflowing */
-        }
+    @media (min-width: 768px) {
+      .desktop-container {
+        max-width: 1200px;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+    }
 
-        .table-container {
-            max-height: 600px; /* Height for the table container */
-            overflow-y: auto; /* Vertical scrollbar */
-        }
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
 
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 1.6em;
+    /* Summary Section */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
 
-        }
+    .summary div {
+      font-size: 14px;
+      color: #555;
+    }
 
-        #buttonContainer {
-            margin-bottom: 15px;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+    .summary span {
+      font-weight: 500;
+      color: #2c3e50;
+    }
 
-        #addRow, #deleteRows {
-            display: none;
-        }
+    /* Add New Row Button */
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      width: auto;
+    }
 
-        button {
-            padding: 6px 10px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.3s;
-        }
+    button:hover {
+      background-color: #45a049;
+    }
 
-        button:hover {
-            background-color: #0056b3;
-        }
+    button i {
+      font-size: 12px;
+    }
 
-        .total {
-            margin-top: 15px;
-            font-weight: bold;
-            font-size: 1.0em;
-            color: #333;
-            text-align: center;
-        }
+    /* Table Styles */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 20px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      max-height: 400px;
+      overflow-y: auto;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            border-radius: 8px;
-        }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
 
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border: 1px solid #ddd;
-        }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
 
-        th {
-            background-color: #007bff;
-            color: #fff;
-        }
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #2c3e50;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      cursor: pointer;
+    }
 
-        td {
-            background-color: #fff;
-            transition: background-color 0.3s;
-        }
+    th.sortable {
+      user-select: none;
+    }
 
-        td:hover {
-            background-color: #f1f1f1;
-        }
+    th.sortable::after {
+      content: "";
+      display: inline-block;
+      margin-left: 5px;
+      font-size: 12px;
+      color: #666;
+    }
 
-        .delete-btn {
-            cursor: pointer;
-            color: #e74c3c;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.15em;
-        }
+    th.sort-asc::after {
+      content: "(Z to Z)";
+    }
 
-        .confirmation-dialog {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
+    th.sort-desc::after {
+      content: "(A to Z)";
+    }
 
-        .dialog-box {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            text-align: center;
-        }
+    td {
+      font-size: 14px;
+      color: #555;
+    }
 
-        .dialog-box button {
-            margin: 5px;
-        }
+    th:nth-child(2), td:nth-child(2) {
+      width: 120px;
+    }
 
-        /* Skeleton loader styles */
-        .skeleton-loader {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh; /* Full height for centering */
-            width: 100%; /* Full width to cover */
-            position: absolute; /* Position absolute to center */
-            top: 0; /* Align to top */
-            left: 0; /* Align to left */
-            background-color: rgba(255, 255, 255, 0.8); /* Light background for loader */
-            z-index: 9998; /* Below dialog */
-        }
+    th:nth-child(3), td:nth-child(3) {
+      width: 120px;
+    }
 
-        .skeleton {
-            height: 20px;
-            width: 300px;
-            background: #e0e0e0;
-            border-radius: 4px;
-            animation: pulse 1.5s infinite;
-            margin: 5px 0; /* Margin between skeletons */
-        }
+    th:nth-child(4), td:nth-child(4),
+    th:nth-child(5), td:nth-child(5) {
+      width: 80px;
+      text-align: center;
+    }
 
-        @keyframes pulse {
-            0% { opacity: 0.3; }
-            50% { opacity: 1; }
-            100% { opacity: 0.3; }
-        }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
 
-        @media (max-width: 600px) {
-            button {
-                width: calc(50% - 5px);
-                font-size: 0.8em;
-            }
+    input[type="text"]:focus {
+      border-color: #4CAF50;
+      outline: none;
+    }
 
-            table {
-                font-size: 0.9em;
-            }
+    .status {
+      cursor: pointer;
+      color: #4CAF50;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
 
-            th, td {
-                padding: 10px;
-            }
+    .status:hover {
+      color: #45a049;
+    }
 
-            .total {
-                font-size: 1.0em;
-            }
-        }
+    .action {
+      cursor: pointer;
+      font-weight: 500;
+      color: #2c3e50;
+      transition: color 0.3s ease;
+    }
 
-    </style>
+    .action:hover {
+      color: #4CAF50;
+    }
+
+    .fa-trash {
+      color: #e74c3c;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .fa-trash:hover {
+      color: #c0392b;
+    }
+
+    .fa-plus {
+      color: #ffffff;
+    }
+
+    /* Confirmation Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .modal-content h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .modal-buttons button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .modal-buttons button.confirm {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .modal-buttons button.confirm:hover {
+      background-color: #c0392b;
+    }
+
+    .modal-buttons button.cancel {
+      background-color: #f8f9fa;
+      color: #333;
+    }
+
+    .modal-buttons button.cancel:hover {
+      background-color: #e0e0e0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .summary {
+        grid-template-columns: 1fr;
+        padding: 15px;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px;
+        font-size: 12px;
+      }
+
+      .table-container {
+        border-radius: 8px;
+      }
+
+      th, td {
+        padding: 10px;
+        font-size: 13px;
+      }
+
+      input[type="text"] {
+        font-size: 13px;
+        padding: 6px;
+      }
+
+      th:nth-child(2), td:nth-child(2) {
+        width: 100px;
+      }
+
+      th:nth-child(3), td:nth-child(3) {
+        width: 100px;
+      }
+
+      th:nth-child(4), td:nth-child(4),
+      th:nth-child(5), td:nth-child(5) {
+        width: 60px;
+      }
+    }
+  </style>
 </head>
-
 <body>
-    <div class="skeleton-loader" id="skeletonLoader">
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
+  <!-- Desktop-only Container -->
+  <div class="desktop-container">
+    <h1>Customer Payments</h1>
+
+    <!-- Summary Section -->
+    <div class="summary">
+      <div>Total Entries: <span id="totalEntries">0</span></div>
+      <div>Total Amount: <span id="totalAmount">0</span></div>
+      <div>Payment Received: <span id="paymentReceived">0</span></div>
+      <div>Cash Out: <span id="cashOut">0</span></div>
     </div>
 
-    <div class="container" id="mainContainer" style="display: none;">
-        <h1>Payment Status</h1>
-        <div id="buttonContainer">
-            <button id="toggleButtons"><i class="fas fa-eye"></i> Show Buttons</button>
-            <button id="addRow"><i class="fas fa-plus"></i> Add Row</button>
-            <button id="deleteRows"><i class="fas fa-trash"></i> Delete All Rows</button>
-        </div>
-        <div class="total">
-            Total Amount: <span id="totalAmount">0</span>
-        </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Sr No</th>
-                        <th>Name</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <!-- Dynamic rows will be added here -->
-                </tbody>
-            </table>
-        </div>
+    <!-- Add New Row Button -->
+    <button onclick="addRow()"><i class="fas fa-plus"></i> Add New Row</button>
+
+    <!-- Table Container -->
+    <div class="table-container">
+      <table id="paymentsTable">
+        <thead>
+          <tr>
+            <th class="sortable" onclick="sortTable(0)">Name</th>
+            <th class="sortable" onclick="sortTable(1)">Amount</th>
+            <th class="sortable" onclick="sortTable(2)">Status</th>
+            <th class="sortable" onclick="sortTable(3)">Action</th>
+            <th>Action2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be added dynamically -->
+        </tbody>
+      </table>
     </div>
+  </div>
 
-    <div class="confirmation-dialog" id="confirmationDialog">
-        <div class="dialog-box">
-            <p>Are you sure you want to delete all rows?</p>
-            <button id="confirmDelete">Yes</button>
-            <button id="cancelDelete">No</button>
-        </div>
+  <!-- Confirmation Modal -->
+  <div class="modal" id="confirmationModal">
+    <div class="modal-content">
+      <h2>Are you sure you want to delete this row?</h2>
+      <div class="modal-buttons">
+        <button class="confirm" onclick="confirmDelete()">Delete</button>
+        <button class="cancel" onclick="closeModal()">Cancel</button>
+      </div>
     </div>
+  </div>
 
-    <div class="confirmation-dialog" id="rowConfirmationDialog">
-        <div class="dialog-box">
-            <p>Are you sure you want to delete this row?</p>
-            <button id="confirmRowDelete">Yes</button>
-            <button id="cancelRowDelete">No</button>
-        </div>
-    </div>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDjgXM4Cei5UnSl1d5vaDkquGnVRPhgipM",
+      authDomain: "payment-status-b5e0e.firebaseapp.com",
+      projectId: "payment-status-b5e0e",
+      storageBucket: "payment-status-b5e0e.firebasestorage.app",
+      messagingSenderId: "635056081890",
+      appId: "1:635056081890:web:882bc5cb47799549bf47bb",
+      measurementId: "G-VKM2VKED9E"
+    };
 
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDjgXM4Cei5UnSl1d5vaDkquGnVRPhgipM",
-            authDomain: "payment-status-b5e0e.firebaseapp.com",
-            projectId: "payment-status-b5e0e",
-            storageBucket: "payment-status-b5e0e.appspot.com",
-            messagingSenderId: "635056081890",
-            appId: "1:635056081890:web:882bc5cb47799549bf47bb",
-            measurementId: "G-VKM2VKED9E"
-        };
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = getFirestore(app);
+    // Function to format number with thousand separator
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
 
-        let rowToDelete = null;
+    // Debounce function
+    function debounce(func, timeout = 300) {
+      let timer;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => { func.apply(this, args); }, timeout);
+      };
+    }
 
-        document.getElementById('toggleButtons').addEventListener('click', function () {
-            const addRowButton = document.getElementById('addRow');
-            const deleteRowsButton = document.getElementById('deleteRows');
-            const isHidden = addRowButton.style.display === 'none';
+    // Function to validate Amount input (only numbers without decimals)
+    function validateAmount(input) {
+      let value = input.value.replace(/,/g, '');
+      value = value.replace(/[^0-9]/g, '');
+      input.value = formatNumber(value);
+      debouncedUpdateFirebaseData(input.closest('tr'));
+    }
 
-            addRowButton.style.display = isHidden ? 'inline-block' : 'none';
-            deleteRowsButton.style.display = isHidden ? 'inline-block' : 'none';
-            this.innerHTML = isHidden ? '<i class="fas fa-eye-slash"></i> Hide Buttons' : '<i class="fas fa-eye"></i> Show Buttons';
-        });
+    // Function to update summary
+    function updateSummary() {
+      const rows = document.querySelectorAll("#paymentsTable tbody tr");
+      let totalEntries = 0;
+      let totalAmount = 0;
+      let paymentReceived = 0;
+      let cashOut = 0;
 
-        document.getElementById('addRow').addEventListener('click', async function () {
-            const tableBody = document.getElementById('tableBody');
-            const rowCount = tableBody.getElementsByTagName('tr').length + 1;
-            const newRow = document.createElement('tr');
+      rows.forEach(row => {
+        const name = row.querySelector(".name").value.trim();
+        const amount = parseFloat(row.querySelector(".amount").value.replace(/,/g, '')) || 0;
+        const status = row.querySelector(".status").textContent;
+        const action = row.querySelector(".action").textContent;
 
-            newRow.innerHTML = `
-                <td>${rowCount}</td>
-                <td contenteditable="true" oninput="this.innerText = this.innerText.toUpperCase(); keepCursorPosition(this)"></td>
-                <td contenteditable="true" onkeypress="return isNumberKey(event)" oninput="updateAmount(this)"></td>
-                <td onclick="toggleStatus(this)">Pending</td>
-                <td><i class="fas fa-trash delete-btn" onclick="confirmRowDelete(this)"></i></td>
-            `;
-            tableBody.appendChild(newRow);
+        if (name !== "") {
+          if (action === "+") {
+            totalAmount += amount;
+          }
 
-            // Add new row to Firebase
-            try {
-                const docRef = await addDoc(collection(db, "paymentRows"), {
-                    srNo: rowCount,
-                    name: "",
-                    amount: "",
-                    status: "Pending"
-                });
-                newRow.dataset.id = docRef.id;
-            } catch (e) {
-                console.error("Error adding document: ", e);
-            }
-        });
+          if (status === "Payment Received") {
+            paymentReceived++;
+          } else if (status === "Cash Out") {
+            cashOut++;
+          }
 
-        document.getElementById('deleteRows').addEventListener('click', function () {
-            document.getElementById('confirmationDialog').style.display = 'flex';
-        });
-
-        document.getElementById('confirmDelete').addEventListener('click', async function () {
-            const tableBody = document.getElementById('tableBody');
-            const rows = tableBody.getElementsByTagName('tr');
-
-            // Delete all documents from Firebase
-            for (let row of rows) {
-                if (row.dataset.id) {
-                    try {
-                        await deleteDoc(doc(db, "paymentRows", row.dataset.id));
-                    } catch (e) {
-                        console.error("Error deleting document: ", e);
-                    }
-                }
-            }
-
-            tableBody.innerHTML = '';
-            updateTotal();
-            document.getElementById('confirmationDialog').style.display = 'none';
-        });
-
-        document.getElementById('cancelDelete').addEventListener('click', function () {
-            document.getElementById('confirmationDialog').style.display = 'none';
-        });
-
-        window.confirmRowDelete = function(icon) {
-            rowToDelete = icon.closest('tr');
-            document.getElementById('rowConfirmationDialog').style.display = 'flex';
-        };
-
-        document.getElementById('confirmRowDelete').addEventListener('click', async function () {
-            if (rowToDelete) {
-                if (rowToDelete.dataset.id) {
-                    try {
-                        await deleteDoc(doc(db, "paymentRows", rowToDelete.dataset.id));
-                    } catch (e) {
-                        console.error("Error deleting document: ", e);
-                    }
-                }
-                rowToDelete.remove();
-                updateSrNo();
-                updateTotal();
-                rowToDelete = null;
-            }
-            document.getElementById('rowConfirmationDialog').style.display = 'none';
-        });
-
-        document.getElementById('cancelRowDelete').addEventListener('click', function () {
-            document.getElementById('rowConfirmationDialog').style.display = 'none';
-            rowToDelete = null;
-        });
-
-        window.toggleStatus = async function(td) {
-            const newStatus = (td.innerText === "Pending") ? "Done" : "Pending";
-            td.innerText = newStatus;
-
-            const row = td.parentElement;
-            if (row.dataset.id) {
-                try {
-                    await updateDoc(doc(db, "paymentRows", row.dataset.id), {
-                        status: newStatus
-                    });
-                } catch (e) {
-                    console.error("Error updating document: ", e);
-                }
-            }
-        };
-
-        window.isNumberKey = function(evt) {
-            const charCode = (evt.which) ? evt.which : evt.keyCode;
-            return !(charCode > 31 && (charCode < 48 || charCode > 57));
-        };
-
-        function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+          totalEntries++;
         }
+      });
 
-        window.updateAmount = async function(input) {
-            const originalValue = input.innerText.replace(/,/g, '');
-            let formattedValue = '';
+      document.getElementById("totalEntries").textContent = totalEntries;
+      document.getElementById("totalAmount").textContent = formatNumber(totalAmount);
+      document.getElementById("paymentReceived").textContent = paymentReceived;
+      document.getElementById("cashOut").textContent = cashOut;
+    }
 
-            if (originalValue === "" || isNaN(originalValue)) {
-                formattedValue = "";
-            } else {
-                formattedValue = formatNumber(Math.floor(originalValue));
-            }
+    // Function to add a new row
+    async function addRow(data = {}) {
+      const tbody = document.querySelector("#paymentsTable tbody");
+      const newRow = document.createElement("tr");
 
-            setTimeout(() => {
-                const range = document.createRange();
-                const selection = window.getSelection();
-                range.selectNodeContents(input);
-                range.collapse(false);
-                selection.removeAllRanges();
-                selection.addRange(range);
-            }, 0);
+      newRow.innerHTML = `
+        <td><input type="text" class="name" placeholder="Enter Name" oninput="debouncedUpdateFirebaseData(this.closest('tr'))" value="${data.name || ''}"></td>
+        <td><input type="text" class="amount" placeholder="Enter Amount" oninput="validateAmount(this)" value="${formatNumber(data.amount || '')}"></td>
+        <td class="status" onclick="toggleStatus(this)">${data.status || 'Payment Received'}</td>
+        <td class="action" onclick="toggleAction(this)">${data.action || '+'}</td>
+        <td><i class="fas fa-trash" onclick="showDeleteConfirmation(this)"></i></td>
+      `;
 
-            input.innerText = formattedValue;
-            updateTotal();
+      tbody.appendChild(newRow);
 
-            const row = input.parentElement;
-            if (row.dataset.id) {
-                try {
-                    await updateDoc(doc(db, "paymentRows", row.dataset.id), {
-                        amount: formattedValue
-                    });
-                } catch (e) {
-                    console.error("Error updating document: ", e);
-                }
-            }
-        };
-
-        window.keepCursorPosition = function(input) {
-            setTimeout(() => {
-                const range = document.createRange();
-                const selection = window.getSelection();
-                range.selectNodeContents(input);
-                range.collapse(false);
-                selection.removeAllRanges();
-                selection.addRange(range);
-            }, 0);
-        };
-
-        function updateTotal() {
-            const tableBody = document.getElementById('tableBody');
-            const rows = tableBody.getElementsByTagName('tr');
-            let total = 0;
-
-            for (let row of rows) {
-                const amountCell = row.cells[2].innerText.replace(/,/g, '');
-                if (!isNaN(amountCell) && amountCell !== "") {
-                    total += parseInt(amountCell, 10);
-                }
-            }
-
-            document.getElementById('totalAmount').innerText = formatNumber(total);
+      if (!data.id) {
+        // Add new data to Firebase
+        try {
+          const docRef = await addDoc(collection(db, "payments"), {
+            name: data.name || '',
+            amount: parseFloat(data.amount) || 0,
+            status: data.status || 'Payment Received',
+            action: data.action || '+'
+          });
+          newRow.dataset.id = docRef.id;
+        } catch (e) {
+          console.error("Error adding document: ", e);
         }
+      } else {
+        newRow.dataset.id = data.id;
+      }
+      updateSummary();
+    }
 
-        function updateSrNo() {
-            const tableBody = document.getElementById('tableBody');
-            const rows = tableBody.getElementsByTagName('tr');
+    // Function to toggle status
+    function toggleStatus(cell) {
+      if (cell.textContent === "Payment Received") {
+        cell.textContent = "Cash Out";
+      } else {
+        cell.textContent = "Payment Received";
+      }
+      debouncedUpdateFirebaseData(cell.closest('tr'));
+    }
 
-            for (let i = 0; i < rows.length; i++) {
-                rows[i].cells[0].innerText = i + 1;
-                // Update Sr No in Firebase
-                if (rows[i].dataset.id) {
-                    updateDoc(doc(db, "paymentRows", rows[i].dataset.id), {
-                        srNo: i + 1
-                    });
-                }
-            }
+    // Function to toggle action (+/-)
+    function toggleAction(cell) {
+      if (cell.textContent === "+") {
+        cell.textContent = "-";
+      } else {
+        cell.textContent = "+";
+      }
+      debouncedUpdateFirebaseData(cell.closest('tr'));
+    }
+
+    // Function to update Firebase data
+    async function updateFirebaseData(row) {
+      const id = row.dataset.id;
+      if (!id) return;
+
+      const name = row.querySelector(".name").value;
+      const amount = parseFloat(row.querySelector(".amount").value.replace(/,/g, '')) || 0;
+      const status = row.querySelector(".status").textContent;
+      const action = row.querySelector(".action").textContent;
+
+      try {
+        await updateDoc(doc(db, "payments", id), {
+          name,
+          amount,
+          status,
+          action
+        });
+      } catch (e) {
+        console.error("Error updating document: ", e);
+      }
+      updateSummary();
+    }
+
+    // Debounced version of updateFirebaseData
+    const debouncedUpdateFirebaseData = debounce(updateFirebaseData, 300);
+
+    // Function to show delete confirmation modal
+    let rowToDelete = null;
+
+    function showDeleteConfirmation(icon) {
+      rowToDelete = icon.closest("tr");
+      const modal = document.getElementById("confirmationModal");
+      modal.style.display = "flex";
+    }
+
+    // Function to confirm deletion
+    async function confirmDelete() {
+      if (rowToDelete) {
+        const id = rowToDelete.dataset.id;
+        if (id) {
+          try {
+            await deleteDoc(doc(db, "payments", id));
+          } catch (e) {
+            console.error("Error removing document: ", e);
+          }
         }
+        rowToDelete.remove();
+        updateSummary();
+      }
+      closeModal();
+    }
 
-        // Load data from Firebase on page load
-        async function loadDataFromFirebase() {
-            const querySnapshot = await getDocs(collection(db, "paymentRows"));
-            const tableBody = document.getElementById('tableBody');
-            tableBody.innerHTML = '';
+    // Function to close the modal
+    function closeModal() {
+      const modal = document.getElementById("confirmationModal");
+      modal.style.display = "none";
+      rowToDelete = null;
+    }
 
-            let rows = [];
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                rows.push({id: doc.id, ...data});
-            });
+    // Function to sort the table
+    function sortTable(columnIndex) {
+      const table = document.getElementById("paymentsTable");
+      const tbody = table.querySelector("tbody");
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+      const header = table.querySelectorAll("th")[columnIndex];
 
-            // Sort rows by srNo
-            rows.sort((a, b) => a.srNo - b.srNo);
+      // Determine the current sort state
+      const isAscending = header.classList.contains("sort-asc");
+      const isDescending = header.classList.contains("sort-desc");
 
-            rows.forEach((data, index) => {
-                const newRow = document.createElement('tr');
-                newRow.dataset.id = data.id;
+      // Remove sort classes from all headers
+      table.querySelectorAll("th").forEach(th => {
+        th.classList.remove("sort-asc", "sort-desc");
+      });
 
-                newRow.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td contenteditable="true" oninput="this.innerText = this.innerText.toUpperCase(); keepCursorPosition(this)">${data.name}</td>
-                    <td contenteditable="true" onkeypress="return isNumberKey(event)" oninput="updateAmount(this)">${data.amount}</td>
-                    <td onclick="toggleStatus(this)">${data.status}</td>
-                    <td><i class="fas fa-trash delete-btn" onclick="confirmRowDelete(this)"></i></td>
-                `;
-                tableBody.appendChild(newRow);
-            });
+      // Toggle between ascending, descending, and default
+      if (!isAscending && !isDescending) {
+        header.classList.add("sort-asc");
+      } else if (isAscending) {
+        header.classList.add("sort-desc");
+      } else {
+        // Default state (no sorting)
+        tbody.innerHTML = ""; // Clear the table body
+        rows.forEach(row => tbody.appendChild(row)); // Re-add rows in original order
+        updateSummary();
+        return;
+      }
 
-            // Show the main container and hide the loader
-            document.getElementById('mainContainer').style.display = 'block';
-            document.getElementById('skeletonLoader').style.display = 'none'; // Hide loader
-            updateTotal();
+      // Sort the rows based on the column content
+      rows.sort((rowA, rowB) => {
+        const cellA = rowA.querySelectorAll("td")[columnIndex];
+        const cellB = rowB.querySelectorAll("td")[columnIndex];
+        const valueA = cellA.textContent || cellA.querySelector("input")?.value;
+        const valueB = cellB.textContent || cellB.querySelector("input")?.value;
+
+        if (columnIndex === 1) { // For Amount column, remove commas and compare numbers
+          const numA = parseFloat(valueA.replace(/,/g, '')) || 0;
+          const numB = parseFloat(valueB.replace(/,/g, '')) || 0;
+          return isAscending ? numA - numB : numB - numA;
+        } else if (columnIndex === 2 || columnIndex === 3) { // For Status and Action columns, group similar values
+          return isAscending ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+        } else { // For Name column, compare as strings
+          return isAscending ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
         }
+      });
 
-        // Call loadDataFromFirebase when the page loads
-        window.addEventListener('load', loadDataFromFirebase);
+      // Re-add sorted rows to the table
+      tbody.innerHTML = "";
+      rows.forEach(row => tbody.appendChild(row));
 
-        // Update Firebase when name is changed
-        document.getElementById('tableBody').addEventListener('blur', async function(event) {
-            if (event.target.cellIndex === 1) { // Name column
-                const row = event.target.parentElement;
-                if (row.dataset.id) {
-                    try {
-                        await updateDoc(doc(db, "paymentRows", row.dataset.id), {
-                            name: event.target.innerText.toUpperCase()
-                        });
-                    } catch (e) {
-                        console.error("Error updating document: ", e);
-                    }
-                }
-            }
-        }, true);
-    </script>
+      // Update the summary
+      updateSummary();
+    }
+
+    // Function to load data from Firebase
+    function loadData() {
+      const paymentsRef = collection(db, "payments");
+      onSnapshot(paymentsRef, (snapshot) => {
+        const tbody = document.querySelector("#paymentsTable tbody");
+        tbody.innerHTML = ""; // Clear existing rows
+        snapshot.forEach((doc) => {
+          addRow({ id: doc.id, ...doc.data() });
+        });
+        updateSummary();
+      });
+    }
+
+    // Load data when the page loads
+    window.addEventListener('DOMContentLoaded', (event) => {
+      loadData();
+    });
+
+    // Make functions available globally
+    window.addRow = addRow;
+    window.toggleStatus = toggleStatus;
+    window.toggleAction = toggleAction;
+    window.showDeleteConfirmation = showDeleteConfirmation;
+    window.confirmDelete = confirmDelete;
+    window.closeModal = closeModal;
+    window.sortTable = sortTable;
+    window.validateAmount = validateAmount;
+    window.debouncedUpdateFirebaseData = debouncedUpdateFirebaseData;
+  </script>
 </body>
 </html>
+
